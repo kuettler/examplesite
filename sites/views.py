@@ -5,9 +5,20 @@ from .models import Site, SiteData
 def formatNumber(n):
     return "{:.2f}".format(n / 100.)
 
+def navbar(page):
+    return [{'name': 'Sites', 'href': '/sites', 'active': page == 'sites'},
+            {'name': 'Summary', 'href': '/summary', 'active': page == 'summary'},]
+
+def buttons(link):
+    return [
+        {'href': '/summary', 'active': link == 'sum', 'name': 'Sum'},
+        {'href': '/summary-average', 'active': link == 'average', 'name': 'Average'},
+    ]
+
 def index(request):
     context = {
         'sites': Site.objects.all(),
+        'navbar': navbar('sites'),
     }
     return render(request, 'sites/index.html', context)
 
@@ -15,6 +26,7 @@ def site(request, site_id):
     site = get_object_or_404(Site, pk=site_id)
     context = {
         'name': site.name,
+        'navbar': navbar('sites'),
         'lines': [{
             'date': sitedata.date.date(),
             'value_a': formatNumber(sitedata.value_a),
@@ -32,7 +44,9 @@ def summary(request):
             'values_a': formatNumber(sum(e[0] for e in line)),
             'values_b': formatNumber(sum(e[1] for e in line)),
         })
-    return render(request, 'sites/summary.html', {'lines': lines})
+    return render(request, 'sites/summary.html', {'lines': lines,
+                                                  'navbar': navbar('summary'),
+                                                  'buttons': buttons('sum')})
 
 def summary_average(request):
     lines = []
@@ -44,4 +58,6 @@ def summary_average(request):
             'values_a': formatNumber(data.value_a / data.id),
             'values_b': formatNumber(data.value_b / data.id),
         })
-    return render(request, 'sites/summary_average.html', {'lines': lines})
+    return render(request, 'sites/summary.html', {'lines': lines,
+                                                  'navbar': navbar('summary'),
+                                                  'buttons': buttons('average')})
